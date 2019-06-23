@@ -2,6 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import HistoryMap from './HistoryMap';
+import HistoryTable from './HistoryTable';
 
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
@@ -50,11 +51,13 @@ function App() {
       </AppBar>
       {value === 0 && <TabContainer>This is the Introduction</TabContainer>}
       {value === 1 && <TabContainer>
-        <div class="leaflet-container">
-          <HistoryMap></HistoryMap>
-        </div>
+          <div class="leaflet-container">
+            <HistoryMap></HistoryMap>
+          </div>
         </TabContainer>}
-      {value === 2 && <TabContainer>Item Three</TabContainer>}
+      {value === 2 && <TabContainer>
+          <HistoryTable></HistoryTable>
+        </TabContainer>}
     </div>
   );
 }
