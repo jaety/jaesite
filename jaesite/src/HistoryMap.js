@@ -4,6 +4,45 @@ import 'leaflet/dist/leaflet.css';
 import {admin0data} from './admindataAfrica';
 
 // const { Map: LeafletMap, TileLayer, Marker, Popup } = ReactLeaflet
+function getColor(input) {
+    let d = input / 100000;
+    return d > 1000 ? '#800026' :
+           d > 500  ? '#BD0026' :
+           d > 200  ? '#E31A1C' :
+           d > 100  ? '#FC4E2A' :
+           d > 50   ? '#FD8D3C' :
+           d > 20   ? '#FEB24C' :
+           d > 10   ? '#FED976' :
+                      '#FFEDA0';
+}
+
+function style(feature) {
+    return {
+        fillColor: getColor(feature.properties.population),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
+}
+
+function highlightFeature(e) {
+    var layer = e.target;
+
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.7
+    });
+
+    // if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    // }
+}
+
+
 
 class HistoryMap extends React.Component {
   constructor() {
@@ -11,8 +50,26 @@ class HistoryMap extends React.Component {
     this.state = {
       lat: -19.0154,
       lng: 29.1549,
-      zoom: 6
+      zoom: 3
     }
+  }
+
+  mapRef
+
+  resetHighlight(e) {
+      this.refs.boundariesLayer.leafletElement.resetStyle(e.target);
+  }
+
+  zoomToFeature(e) {
+      this.refs.map.leafletElement.fitBounds(e.target.getBounds());
+  }
+
+  onEachFeature(feature, layer) {
+      layer.on({
+          mouseover: highlightFeature,
+          mouseout: this.resetHighlight.bind(this),
+          click: this.zoomToFeature.bind(this)
+      });
   }
 
   render() {
@@ -24,13 +81,16 @@ class HistoryMap extends React.Component {
 			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>';
 
     return (
-      <Map center={position} zoom={this.state.zoom}>
+      <Map center={position} zoom={this.state.zoom} ref="map">
         <TileLayer
           attribution={mapAttribution}
           url={mapUrl}
         />
         <GeoJSON
           data={admin0data}
+          style={style}
+          onEachFeature={this.onEachFeature.bind(this)}
+          ref="boundariesLayer"
         />
         <Marker position={position}>
           <Popup>
