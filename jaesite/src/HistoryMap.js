@@ -1,7 +1,7 @@
 import React from 'react';
 import { Map, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import {admin0data} from './admindataAfrica';
+// import {admin0data} from './admindataAfrica';
 
 // const { Map: LeafletMap, TileLayer, Marker, Popup } = ReactLeaflet
 function getColor(input) {
@@ -50,11 +50,16 @@ class HistoryMap extends React.Component {
     this.state = {
       lat: -19.0154,
       lng: 29.1549,
-      zoom: 3
+      zoom: 3,
+      datasets: []
     }
   }
 
-  mapRef
+  componentDidMount() {
+    fetch('http://localhost:5000')
+      .then(response => response.json())
+      .then(dataset => this.setState({datasets: [dataset]}))
+  }
 
   resetHighlight(e) {
       this.refs.boundariesLayer.leafletElement.resetStyle(e.target);
@@ -86,12 +91,15 @@ class HistoryMap extends React.Component {
           attribution={mapAttribution}
           url={mapUrl}
         />
-        <GeoJSON
-          data={admin0data}
-          style={style}
-          onEachFeature={this.onEachFeature.bind(this)}
-          ref="boundariesLayer"
-        />
+        {this.state.datasets.map((data,idx) => {
+          return (<GeoJSON
+            key={idx}
+            data={data}
+            style={style}
+            onEachFeature={this.onEachFeature.bind(this)}
+            ref="boundariesLayer"
+          />)
+        })}
         <Marker position={position}>
           <Popup>
             A pretty CSS3 popup. <br/> Easily customizable.

@@ -2,6 +2,8 @@
 
 1. Postgis database
 2. Front End MVP
+3. Clean up so it can all install from checkout
+4. Tyler Review frontend?
 
 
 
