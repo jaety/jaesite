@@ -1,7 +1,7 @@
 import React from 'react';
-import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Map, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import {admin0data} from 'admin0data1';
+import {admin0data} from './admin0data1';
 
 // const { Map: LeafletMap, TileLayer, Marker, Popup } = ReactLeaflet
 
@@ -9,15 +9,15 @@ class HistoryMap extends React.Component {
   constructor() {
     super()
     this.state = {
-      lat: 51.505,
+      lat: -19.0154,
       lng: 29.1549,
-      zoom: 8
+      zoom: 6
     }
   }
 
   render() {
     const position = [this.state.lat, this.state.lng];
-    const mapboxAccessToken = pk.eyJ1IjoiamFldHkiLCJhIjoiY2p5Y3hpaDNtMGF6MTNwanprY2lmZGtoaSJ9.vv8A-gUvtzjeAkU8oNGHQw;
+    const mapboxAccessToken = 'pk.eyJ1IjoiamFldHkiLCJhIjoiY2p5Y3hpaDNtMGF6MTNwanprY2lmZGtoaSJ9.vv8A-gUvtzjeAkU8oNGHQw';
     const mapUrl = 'https://api.tiles.mapbox.com/v4/mapbox.light/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken;
     const mapAttribution = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
 			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
@@ -26,8 +26,11 @@ class HistoryMap extends React.Component {
     return (
       <Map center={position} zoom={this.state.zoom}>
         <TileLayer
-          attribution={mapUrl}
-          url={mapAttribution}
+          attribution={mapAttribution}
+          url={mapUrl}
+        />
+        <GeoJSON
+          data={admin0data}
         />
         <Marker position={position}>
           <Popup>
