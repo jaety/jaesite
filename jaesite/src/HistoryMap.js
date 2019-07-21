@@ -1,7 +1,7 @@
 import React from 'react';
 import { Map, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import {admin0data} from './admin0data1';
+import {admin0data} from './admindataAfrica';
 
 // const { Map: LeafletMap, TileLayer, Marker, Popup } = ReactLeaflet
 
