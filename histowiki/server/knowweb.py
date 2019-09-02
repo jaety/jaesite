@@ -41,9 +41,9 @@ def africa_countries():
         			'continent', continent
         		 )
         	 ) as geo
-    	     FROM admin0
-             WHERE continent = 'Africa';
+    	     FROM admin0;
         """
+        #              WHERE continent = 'Africa';
 
         cursor.execute(query)
         records = cursor.fetchall()

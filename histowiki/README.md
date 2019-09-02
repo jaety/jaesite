@@ -2,8 +2,9 @@
 
 1. Postgis database
 2. Front End MVP
-3. Clean up so it can all install from checkout
-4. Tyler Review frontend?
+3. Install set of people into PostGIS
+4. Clean up so it can all install from checkout
+5. Tyler Review frontend?
 
 
 
@@ -50,6 +51,10 @@ SELECT json_build_object(
  )
  FROM admin0
  LIMIT 1;
+
+### People into Postgis
+
+
 
 
 ## Front End MVP
@@ -117,6 +122,11 @@ https://tableplus.io/blog/2018/04/postgresql-how-to-create-read-only-user.html
 create user geo with password 'geo123'
 GRANT CONNECT ON DATABASE geobrowser TO geo;
 GRANT SELECT ON admin0 TO geo;
+
+### PostGIS & Python
+
+* http://chrishaganreporting.com/2014/03/inserting-geometry-with-postgis-and-psycopg2/
+* http://www.fabianowski.eu/projects/ppygis/
 
 ### Learning React
 

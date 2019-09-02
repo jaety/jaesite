@@ -2,3 +2,4 @@ temp/
 .ipynb_checkpoints/
 .web_cache/
 __pycache__/
+*.swp
