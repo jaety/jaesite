@@ -1,24 +1,25 @@
 import React from 'react';
 import { Map, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-// import {admin0data} from './admindataAfrica';
 
-// const { Map: LeafletMap, TileLayer, Marker, Popup } = ReactLeaflet
-function getColor(input) {
-    let d = input / 100000;
-    return d > 1000 ? '#800026' :
-           d > 500  ? '#BD0026' :
-           d > 200  ? '#E31A1C' :
-           d > 100  ? '#FC4E2A' :
-           d > 50   ? '#FD8D3C' :
-           d > 20   ? '#FEB24C' :
-           d > 10   ? '#FED976' :
-                      '#FFEDA0';
+
+function getColor(input, scale) {
+    var colors = ['#FFEDA0','#FED976','#FEB24C','#FD8D3C','#FC4E2A','#E31A1C','#BD0026','#800026'];
+    return colors[Math.floor( (input / scale) * (colors.length-1) )]
+    // let d = input / 100000;
+    // return d > 1000 ? '#800026' :
+    //        d > 500  ? '#BD0026' :
+    //        d > 200  ? '#E31A1C' :
+    //        d > 100  ? '#FC4E2A' :
+    //        d > 50   ? '#FD8D3C' :
+    //        d > 20   ? '#FEB24C' :
+    //        d > 10   ? '#FED976' :
+    //                   '#FFEDA0';
 }
 
 function style(feature) {
     return {
-        fillColor: getColor(feature.properties.population),
+        fillColor: getColor(feature.properties.population, 100),
         weight: 2,
         opacity: 1,
         color: 'white',

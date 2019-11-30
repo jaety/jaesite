@@ -1,3 +1,105 @@
+# Install Instructions
+
+## Pre-requisites
+
+* PostgreSQL & PostGIS Installed : `brew install postgis`
+  or see installation notes: https://postgis.net/install/
+* Conda : We use this for the python environment.
+	* You'll need Jupyter
+
+## Database Preparation
+
+Create Database:
+
+```
+CREATE DATABASE geobrowser
+```
+
+Upload Shapefile data:
+```
+shp2pgsql -s 4326 data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp public.countries_110m | psql -d geobrowser -U postgres
+```
+
+* _(SRID = 4326) See [Understanding how to get appropriate SRID from admin0 files (.prj)](https://stackoverflow.com/questions/1541202/how-do-you-know-what-srid-to-use-for-a-shp-file) for more details_
+
+Create User:
+```
+CREATE USER geo WITH PASSWORD 'geo123'
+GRANT CONNECT ON DATABASE geobrowser TO geo;
+GRANT SELECT ON countries_110m TO geo;
+```
+
+Create People Table:
+```
+CREATE TABLE public.people
+(
+    autoid integer NOT NULL DEFAULT nextval('people_autoid_seq'::regclass),
+    qid character varying(15) COLLATE pg_catalog."default",
+    birth timestamp with time zone,
+    birthcoords geography(Point,4326),
+    birthlabel text COLLATE pg_catalog."default",
+    birthqid character varying(15) COLLATE pg_catalog."default",
+    death timestamp with time zone,
+    deathcoords geography(Point,4326),
+    deathlabel text COLLATE pg_catalog."default",
+    deathqid character varying(15) COLLATE pg_catalog."default",
+    image text COLLATE pg_catalog."default",
+    wikidataurl text COLLATE pg_catalog."default",
+    persondescription text COLLATE pg_catalog."default",
+    CONSTRAINT people_pkey PRIMARY KEY (autoid)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public.people
+    OWNER to postgres;
+```
+
+## People data from wikidata
+```
+select ?person ?name ?desc ?birthDate ?birthPrecision ?birthPlace ?birthPlaceName ?birthCoords ?deathDate ?deathPrecision ?deathPlace ?deathPlaceName
+where {
+ ?person wdt:P31 wd:Q5;
+         wdt:P569 ?birthDate.
+  hint:Prior hint:rangeSafe "true"^^xsd:boolean.
+  FILTER((?birthDate >= "1901-01-01"^^xsd:dateTime) && (?birthDate < "1902-01-01"^^xsd:dateTime))  
+ OPTIONAL {
+   ?person p:P569/psv:P569 $birthTime.
+   ?birthTime wikibase:timePrecision $birthPrecision              
+ }
+ OPTIONAL {
+    ?person rdfs:label ?name
+    FILTER (LANG(?name) = "en").   
+ }
+ OPTIONAL {
+    ?person schema:description ?desc
+    FILTER (LANG(?desc) = "en").
+ }
+ OPTIONAL {
+    ?person wdt:P19  ?birthPlace.
+    ?birthPlace wdt:P625 ?birthCoords.
+    ?birthPlace rdfs:label ?birthPlaceName
+    FILTER (LANG(?birthPlaceName) = "en").
+ }
+ OPTIONAL {
+    ?person wdt:P570 ?deathDate;
+            wdt:P20  ?deathPlace.
+    ?deathPlace wdt:P625 ?deathCoords.
+    ?deathPlace rdfs:label ?deathPlaceName
+    FILTER (LANG(?deathPlaceName) = "en").
+    ?person p:P570/psv:P570 $deathTime.
+    ?deathTime wikibase:timePrecision $deathPrecision
+ }
+
+}
+```
+
+* Codes for precision are: The codes for precision are 0: billion years, 1: hundred million years, 3: million years, 4: hundred thousand years, 5: ten thousand years, 6: millennium, 7: century, 8: decade, 9: year, 10: month, 11: day, 12: hour, 13: minute, 14: second. https://en.wikibooks.org/wiki/SPARQL/WIKIDATA_Precision,_Units_and_Coordinates
+
+----
+
 # Roadmap
 
 1. Postgis database
@@ -66,6 +168,12 @@ SELECT json_build_object(
 * jaesite
 
 * I'm going to want to clean up the directories around here.
+
+Detailed Steps
+
+1. Launcher for servers (web + postgres front end)
+1. Front end able to talk to web server & query
+1.
 
 ### Leaflet chloropleth
 

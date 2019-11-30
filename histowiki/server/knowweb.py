@@ -33,15 +33,14 @@ def africa_countries():
         	SELECT json_build_object(
         		'type',       'Feature',
         		'id',         gid,
-        		'geometry',   ST_AsGeoJSON(geom)::json,
+        		'geometry',   ST_AsGeoJSON(ctry_geom)::json,
         		'properties', json_build_object(
-        			'name', name,
-        			'code', iso_a3,
-        			'population', pop_est,
-        			'continent', continent
+        			'name', ctry_name,
+        			'code', ctry_code,
+        			'population', n_people
         		 )
         	 ) as geo
-    	     FROM admin0;
+    	     FROM country_counts;
         """
         #              WHERE continent = 'Africa';
 
