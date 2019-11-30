@@ -1,4 +1,5 @@
 temp/
+data/
 .ipynb_checkpoints/
 .web_cache/
 __pycache__/
