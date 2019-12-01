@@ -8,10 +8,12 @@
     "ag-grid-community": "^21.0.1",
     "ag-grid-react": "^21.0.1",
     "leaflet": "^1.5.1",
+    "material-ui-icons": "^1.0.0-beta.36",
     "pg": "^7.11.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-leaflet": "^2.4.0",
+    "react-leaflet-div-icon": "^1.1.0",
     "react-scripts": "3.0.1",
     "redux": "^4.0.1"
   },
