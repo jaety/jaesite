@@ -4,6 +4,7 @@ import { Map, TileLayer, Marker, Popup, Rectangle, Tooltip, GeoJSON } from 'reac
 import { MapControl, PropTypes } from 'react-leaflet';
 // import DivIcon from 'react-leaflet-div-icon';
 import 'leaflet/dist/leaflet.css';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -78,11 +79,11 @@ class HistoryMap extends React.Component {
     fetch('http://localhost:5000')
       .then(response => response.json())
       .then(dataset => this.setState({datasets: [dataset]}))
-    // fetch('http://localhost:5000/people')
-    //   .then(response => response.json())
-    //   .then(dataset => {
-    //     this.setState({people: dataset});
-    //   })
+    fetch('http://localhost:5000/people')
+      .then(response => response.json())
+      .then(dataset => {
+        this.setState({people: dataset});
+      })
   }
 
   setHighlight(e) {
@@ -115,30 +116,30 @@ class HistoryMap extends React.Component {
   }
 
   handleMoveEnd(e) {
-    function buildUrl(base, bounds) {
-      return `http://localhost:5000/${base}?minx=${bounds.getWest()}&maxx=${bounds.getEast()}&miny=${bounds.getSouth()}&maxy=${bounds.getNorth()}`
-    }
-
-    const bounds = e.target.getBounds();
-    console.log(bounds);
-    console.log(buildUrl("count_in_box",bounds))
-    fetch(buildUrl("count_in_box",bounds))
-      .then(response => response.json())
-      .then(count => {
-        console.log("count",count, count<75)
-        if (count < 200) {
-          fetch(buildUrl("people_in_box",bounds))
-            .then(response => response.json())
-            .then(dataset => {
-              console.log(dataset)
-              this.setState({people: dataset});
-            })
-        } else {
-          this.setState({
-            people: {rows:[]}
-          })
-        }
-      });
+    // function buildUrl(base, bounds) {
+    //   return `http://localhost:5000/${base}?minx=${bounds.getWest()}&maxx=${bounds.getEast()}&miny=${bounds.getSouth()}&maxy=${bounds.getNorth()}`
+    // }
+    //
+    // const bounds = e.target.getBounds();
+    // console.log(bounds);
+    // console.log(buildUrl("count_in_box",bounds))
+    // fetch(buildUrl("count_in_box",bounds))
+    //   .then(response => response.json())
+    //   .then(count => {
+    //     console.log("count",count, count<75)
+    //     if (count < 200) {
+    //       fetch(buildUrl("people_in_box",bounds))
+    //         .then(response => response.json())
+    //         .then(dataset => {
+    //           console.log(dataset)
+    //           this.setState({people: dataset});
+    //         })
+    //     } else {
+    //       this.setState({
+    //         people: {rows:[]}
+    //       })
+    //     }
+    //   });
   }
 
   render() {
@@ -174,22 +175,14 @@ class HistoryMap extends React.Component {
     const rows = this.state.people.rows;
     console.log(rows)
     console.log(rows.map((row,idx) => point2position(row[2])))
+
     return (
-      <Map center={position} zoom={this.state.zoom} ref="map" onMoveEnd={this.handleMoveEnd.bind(this)}>
+      <Map center={position} zoom={this.state.zoom} ref="map" onMoveEnd={this.handleMoveEnd.bind(this)} maxZoom={18}>
         <TileLayer
           attribution={mapAttribution}
           url={mapUrl}
         />
-        {this.state.datasets.map((data,idx) => {
-          return (<GeoJSON
-            key={idx}
-            data={data}
-            style={style}
-            onEachFeature={this.onEachFeature.bind(this)}
-            ref="boundariesLayer"
-          />)
-        })}
-        { marker }
+        <MarkerClusterGroup>
         {this.state.people.rows.map((row,idx) =>
           <Marker key={`marker-${idx}`} position={point2position(row[2])} autoPan="false">
             <Popup>
@@ -198,10 +191,23 @@ class HistoryMap extends React.Component {
             </Popup>
           </Marker>
         )}
+        </MarkerClusterGroup>
       </Map>
     );
   }
 }
+
+// {this.state.datasets.map((data,idx) => {
+//   return (<GeoJSON
+//     key={idx}
+//     data={data}
+//     style={style}
+//     onEachFeature={this.onEachFeature.bind(this)}
+//     ref="boundariesLayer"
+//   />)
+// })}
+// { marker }
+
 
 
 

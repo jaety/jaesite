@@ -64,7 +64,7 @@ def people_in_box():
             "columns" : columns,
             "rows" : records
         }
-        
+
     box = { p:request.args.get(p) for p in ['minx','maxx','miny','maxy']}
     return query_db("""
         select person, name, ST_AsGeoJSON("birthCoords")::json as birth_point, "desc", "birthTime", "birthPlaceName" from people
@@ -84,9 +84,8 @@ def people():
             "rows" : records
         }
     return query_db("""
-        select person, name, ST_AsGeoJSON("birthCoords")::json as birth_point, "desc" from people
+        select person, name, ST_AsGeoJSON("birthCoords")::json as birth_point, "desc", "birthTime", "birthPlaceName" from people
         where name is not null
-        limit 100
     """, format_result)
     # return {"columns": columns, "rows":rows}
 
