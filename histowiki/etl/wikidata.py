@@ -44,8 +44,7 @@ def people_query(begin,end,pieces):
                     }"""),
         "name" : QueryItem(["?name"], """
                     OPTIONAL {
-                        ?person wdt:P735 ?nameId.
-                        ?nameId rdfs:label ?name.
+                        ?person rdfs:label ?name.
                         FILTER (LANG(?name) = "en").
                     }"""),
         "desc" : QueryItem(["?desc"], """
