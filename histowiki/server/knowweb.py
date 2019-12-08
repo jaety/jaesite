@@ -89,6 +89,14 @@ def people():
     """, format_result)
     # return {"columns": columns, "rows":rows}
 
+@app.route('/count_over_time')
+def count_over_time():
+    def format_result(records, columns):
+        return [[year, count] for (count,year) in records]
+    return query_db("""
+        select count,year from time_counts order by year
+    """, format_result)
+
 
 @app.route('/')
 def counts_by_country():

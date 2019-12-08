@@ -2,9 +2,16 @@ import React from 'react';
 import L from 'leaflet';
 import { Map, TileLayer, Marker, Popup, Rectangle, Tooltip, GeoJSON } from 'react-leaflet';
 import { MapControl, PropTypes } from 'react-leaflet';
+import moment from 'moment';
 // import DivIcon from 'react-leaflet-div-icon';
 import 'leaflet/dist/leaflet.css';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
+
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+import addHistogramModule from 'highcharts/modules/histogram-bellcurve'
+
+addHistogramModule(Highcharts);
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -72,6 +79,17 @@ class HistoryMap extends React.Component {
       people: {rows:[]},
       highlightCenter: undefined,
       hightlightCountry: undefined,
+      timeChartState: {
+          chart: {
+            zoomType: 'x'
+          },
+          title: {
+            text: 'Over Time'
+          },
+          series: [{
+              data: [3.5, 3, 3.2, 3.1, 3.6, 3.9, 3.4]
+          }]
+      }
     }
   }
 
@@ -82,7 +100,46 @@ class HistoryMap extends React.Component {
     fetch('http://localhost:5000/people')
       .then(response => response.json())
       .then(dataset => {
+        var columnMap = {}
+        dataset.columns.forEach((name,idx) => columnMap[name] = idx)
+        dataset['map'] = columnMap
         this.setState({people: dataset});
+      })
+    fetch('http://localhost:5000/count_over_time')
+      .then(response => response.json())
+      .then(dataset => {
+        this.setState({'timeChartState': {
+          xAxis: [{
+              title: { text: 'Year' },
+              alignTicks: false
+          } /*, {
+              title: { text: 'Histogram' },
+              alignTicks: false,
+              opposite: true
+          } */],
+
+          yAxis: [{
+              title: { text: 'Counts' }
+          } /*, {
+              title: { text: 'Histogram' },
+              opposite: true
+          }*/],
+
+          series: [
+            // {
+            //   type: 'histogram',
+            //   baseSeries: 1,
+            //   xAxis: 1,
+            //   yAxis: 1
+            // },
+            {
+              data: dataset,
+              step: true,
+              xAxis: 0,
+              yAxis: 0
+            }
+          ]
+        }});
       })
   }
 
@@ -173,26 +230,41 @@ class HistoryMap extends React.Component {
       )
     }
     const rows = this.state.people.rows;
-    console.log(rows)
-    console.log(rows.map((row,idx) => point2position(row[2])))
+    const colmap = this.state.people.map;
+
+    function formatDate(d) {
+      const dFixed = d.replace(/^-/,"-00");
+      return moment.utc(dFixed).format("MMM Do YYYY")
+    }
 
     return (
-      <Map center={position} zoom={this.state.zoom} ref="map" onMoveEnd={this.handleMoveEnd.bind(this)} maxZoom={18}>
-        <TileLayer
-          attribution={mapAttribution}
-          url={mapUrl}
+      <div>
+        {/*
+        <Map center={position} zoom={this.state.zoom} ref="map" onMoveEnd={this.handleMoveEnd.bind(this)} maxZoom={18}>
+          <TileLayer
+            attribution={mapAttribution}
+            url={mapUrl}
+          />
+          <MarkerClusterGroup chunkedLoading={true}>
+          {this.state.people.rows.map((row,idx) =>
+            <Marker key={`marker-${idx}`} position={point2position(row[colmap["birth_point"]])} autoPan="false">
+              <Popup>
+                <span><a href={row[colmap["person"]]}>{row[colmap["name"]]}</a></span>
+                <br />
+                {row[colmap["desc"]]}
+                <br />
+                {formatDate(row[colmap["birthTime"]])}
+              </Popup>
+            </Marker>
+          )}
+          </MarkerClusterGroup>
+        </Map>
+        */}
+        <HighchartsReact
+          highcharts={Highcharts}
+          options={this.state.timeChartState}
         />
-        <MarkerClusterGroup>
-        {this.state.people.rows.map((row,idx) =>
-          <Marker key={`marker-${idx}`} position={point2position(row[2])} autoPan="false">
-            <Popup>
-              <p><span><a href={row[0]}>{row[1]}</a></span></p>
-              <p>{row[3]}</p>
-            </Popup>
-          </Marker>
-        )}
-        </MarkerClusterGroup>
-      </Map>
+      </div>
     );
   }
 }
