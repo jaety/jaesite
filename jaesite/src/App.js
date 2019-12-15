@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from './logo.svg';
+// import logo from './logo.svg';
 import './App.css';
 import HistoryMap from './HistoryMap';
 import HistoryTable from './HistoryTable';
@@ -10,7 +10,8 @@ import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
-import Drawer from '@material-ui/core/Drawer';
+// import Drawer from '@material-ui/core/Drawer';
+// import Button from '@material-ui/core/Button';
 
 // import IconButton from '@material-ui/core/IconButton';
 // import MenuIcon from '@material-ui/icons/Menu';
@@ -18,7 +19,6 @@ import Drawer from '@material-ui/core/Drawer';
 // import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 
-import Button from '@material-ui/core/Button';
 
 function TabContainer(props) {
   return (
@@ -94,8 +94,8 @@ const useStyles = makeStyles(theme => ({
 
 function App() {
   const classes = useStyles();
-  const [value, setValue] = React.useState(1);
-  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState(2);
+  // const [open, setOpen] = React.useState(false);
 
   function handleChange(event, newValue) {
     setValue(newValue);
@@ -112,7 +112,7 @@ function App() {
       </AppBar>
       {value === 0 && <TabContainer>This is the Introduction</TabContainer>}
       {value === 1 && <TabContainer>
-          <div class="leaflet-container">
+          <div className="leaflet-container">
             <HistoryMap></HistoryMap>
           </div>
         </TabContainer>}
