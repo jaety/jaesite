@@ -10,6 +10,7 @@
     "highcharts": "^7.2.1",
     "highcharts-react-official": "^2.2.2",
     "leaflet": "^1.6.0",
+    "leaflet-path-transform": "^1.1.2",
     "leaflet.markercluster": "^1.4.1",
     "material-ui-icons": "^1.0.0-beta.36",
     "moment": "^2.24.0",

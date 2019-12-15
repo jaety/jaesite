@@ -4,7 +4,9 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import moment from 'moment';
 import Grid from '@material-ui/core/Grid';
-import { Map, TileLayer} from 'react-leaflet';
+import { Map, TileLayer, Rectangle, Path } from 'react-leaflet';
+import 'leaflet-path-transform';
+import DraggableRectangle from './DraggableRectangle';
 
 function peopleToTable(dataset) {
   const columnDefs = [
@@ -51,6 +53,7 @@ function peopleToTable(dataset) {
   }
 }
 
+
 class HistoryTable extends Component {
   constructor(props) {
     super(props);
@@ -61,6 +64,11 @@ class HistoryTable extends Component {
       lat: 47.3769,
       lng: 8.5417,
       zoom: 5,
+
+      rectBounds: [
+        [46, 7],
+        [48, 9]
+      ],
 
       content: "Welcome to the histor-wiki"
     }
@@ -76,7 +84,8 @@ class HistoryTable extends Component {
         this.setState(peopleToTable(dataset));
         console.log(this.state);
       })
-      /*
+
+    /*
     fetch('https://en.wikipedia.org/w/api.php?action=query&prop=extracts&titles=Leo_II_(emperor)' +
           '&exlimit=1&exsentences=5&origin=*&format=json&explaintext=true')
       .then(response => response.json())
@@ -137,6 +146,7 @@ class HistoryTable extends Component {
                 attribution={mapAttribution}
                 url={mapUrl}
               />
+              <DraggableRectangle bounds={this.state.rectBounds} color="blue" ref="rectBounds" transform={true} draggable={true} />
             </Map>
         </div>
         <div>
