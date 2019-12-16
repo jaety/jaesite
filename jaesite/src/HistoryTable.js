@@ -4,9 +4,13 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import moment from 'moment';
 import Grid from '@material-ui/core/Grid';
-import { Map, TileLayer, Rectangle, Path } from 'react-leaflet';
+import { Map, TileLayer, Rectangle, Path, Marker } from 'react-leaflet';
 import 'leaflet-path-transform';
 import DraggableRectangle from './DraggableRectangle';
+
+function point2position(point) {
+  return [point.coordinates[1], point.coordinates[0]];
+}
 
 function peopleToTable(dataset) {
   const columnDefs = [
@@ -61,53 +65,66 @@ class HistoryTable extends Component {
       columnDefs: [],
       rowData: [],
 
-      lat: 47.3769,
-      lng: 8.5417,
-      zoom: 5,
+      lat: 47.9899,
+      lng: 48.3509,
+      zoom: 2,
 
       rectBounds: [
-        [46, 7],
-        [48, 9]
+        [17, -17],
+        [72, 62]
       ],
+
+      marker: null,
 
       content: "Welcome to the histor-wiki"
     }
   }
 
-  componentDidMount() {
-    fetch('http://localhost:5000/people?limit=500')
+  loadDataset() {
+    const miny = this.state.rectBounds[0][0]
+    const minx = this.state.rectBounds[0][1]
+    const maxy = this.state.rectBounds[1][0]
+    const maxx = this.state.rectBounds[1][1]
+    fetch(`http://localhost:5000/people?minx=${minx}&miny=${miny}&maxx=${maxx}&maxy=${maxy}`)
       .then(response => response.json())
       .then(dataset => {
         var columnMap = {}
         dataset.columns.forEach((name,idx) => columnMap[name] = idx)
         dataset['map'] = columnMap
         this.setState(peopleToTable(dataset));
-        console.log(this.state);
       })
+  }
 
-    /*
-    fetch('https://en.wikipedia.org/w/api.php?action=query&prop=extracts&titles=Leo_II_(emperor)' +
-          '&exlimit=1&exsentences=5&origin=*&format=json&explaintext=true')
-      .then(response => response.json())
-      .then(dataset => {
-        console.log(dataset);
-        const content = Object.values(dataset['query']['pages'])[0].extract
-        this.setState({content:content})
-      })
-      */
+  componentDidMount() {
+    this.loadDataset();
   }
 
   onCellClicked(event) {
+    /*
     const birth_point = event.data.birth_point.coordinates;
     const zoom = this.refs.map.leafletElement.getZoom();
     this.setState({lng: birth_point[0], lat: birth_point[1], zoom: zoom});
-    console.log(event.data);
+    */
+    this.setState({
+      marker: point2position(event.data.birth_point)
+    })
     const qid = event.data.person.split('/').slice(-1)[0]
     fetch("http://localhost:5000/wikipedia_summary/" + qid)
       .then(response => response.json())
       .then(dataset => {
         this.setState({content:dataset})
       })
+  }
+
+  onBoundChange(bounds) {
+    this.setState({
+      rectBounds: [
+        [bounds.getSouth(), bounds.getWest()],
+        [bounds.getNorth(), bounds.getEast()]
+      ]
+    });
+    this.loadDataset();
+    console.log(bounds);
   }
 
   render() {
@@ -146,7 +163,11 @@ class HistoryTable extends Component {
                 attribution={mapAttribution}
                 url={mapUrl}
               />
-              <DraggableRectangle bounds={this.state.rectBounds} color="blue" ref="rectBounds" transform={true} draggable={true} />
+              <DraggableRectangle bounds={this.state.rectBounds} color="blue" ref="rectBounds"
+                    transform={true} draggable={true}
+                    onBoundChange={ this.onBoundChange.bind(this) }/>
+
+              {(this.state.marker) && <Marker position={this.state.marker} />}
             </Map>
         </div>
         <div>

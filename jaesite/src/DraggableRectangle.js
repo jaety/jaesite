@@ -7,8 +7,15 @@ type LeafletElement = LeafletRectangle
 type Props = { bounds: LatLngBounds } & PathProps
 
 class Rectangle extends Path<LeafletElement, Props> {
+  static defaultProps = {
+      onBoundChange: (x) => x
+  }
+
   createLeafletElement(props: Props): LeafletElement {
-    return new LeafletRectangle(props.bounds, this.getOptions(props))
+    const rect = new LeafletRectangle(props.bounds, this.getOptions(props));
+    rect.on('scaleend', this.onMoveEnd.bind(this));
+    rect.on('dragend', this.onMoveEnd.bind(this));
+    return rect;
   }
 
   componentDidMount() {
@@ -19,9 +26,14 @@ class Rectangle extends Path<LeafletElement, Props> {
       this.leafletElement.dragging.enable();
   }
 
+  onMoveEnd(e) {
+    this.props.onBoundChange(this.leafletElement.getBounds());
+  }
+
   updateLeafletElement(fromProps: Props, toProps: Props) {
     if (toProps.bounds !== fromProps.bounds) {
       this.leafletElement.setBounds(toProps.bounds)
+      //this.props.onBoundChange(toProps.bounds);
     }
     this.setStyleIfChanged(fromProps, toProps)
   }
