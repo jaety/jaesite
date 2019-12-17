@@ -21,10 +21,6 @@ export class Rect {
       maxy: this.maxy
     }
   }
-
-  asQueryParams() {
-    return `minx=${this.minx}&maxx=${this.maxx}&miny=${this.miny}&maxy=${this.maxy}`
-  }
 }
 
 export class Point {

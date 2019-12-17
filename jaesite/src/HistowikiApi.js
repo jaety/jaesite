@@ -17,6 +17,18 @@ export class HistowikiApi {
     return withUrlParams(new URL(endPoint,this.baseUrl), params);
   }
 
+  /**
+   *  Returns { columns: [], rows : [] }
+   *    columns: list of strings. names of the columns
+   *    rows   : list of lists. Inner items in order defined by columns
+   *
+   *    person
+   *    name
+   *    birth_point { type: "Point", coordinates: [lat, lng] }
+   *    desc
+   *    birthTime // UTC Format e.g. 0962-01-01T00:00:00Z.
+   *    birthPlaceName
+   */
   people({
       bounds, // geometry.Rect
       limit,
