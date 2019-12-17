@@ -12,10 +12,6 @@ import 'leaflet-path-transform';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
-function point2position(point) {
-  return [point.coordinates[1], point.coordinates[0]];
-}
-
 /**
   AG Grid : Render a field as a url, with href taken from another field
     @param {string} urlField : field from data object
@@ -25,6 +21,39 @@ function hyperlinkRenderer(urlField) {
     const url = params.data[urlField];
     const display = params.value;
     return `<a href=${url}>${display}`;
+  }
+}
+
+function withUrlParams(url, params) {
+  var urlObj = new URL(url);
+  var params = params || {};
+  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+  return urlObj;
+}
+
+class HistowikiApi {
+  constructor(baseUrl = "http://localhost:5000") {
+    this.baseUrl = baseUrl
+  }
+
+  apiUrl(endPoint, params) {
+    return withUrlParams(new URL(endPoint,this.baseUrl), params);
+  }
+
+  people({
+      bounds, // geometry.Rect
+      limit,
+      only_query = false} = {}
+    ) {
+      const params = Object.assign({}, bounds.asDict(), {limit:limit, only_query:only_query});
+      return fetch(this.apiUrl("people", params))
+        .then(response => response.json())
+      }
+
+  wikipedia_summary({qid}) {
+    if (!qid) { throw "qid is required"; }
+    return fetch(this.apiUrl(`wikipedia_summary/${qid}`))
+      .then(response => response.json());
   }
 }
 
@@ -93,11 +122,12 @@ class HistoryTable extends Component {
 
       content: "Welcome to the histor-wiki"
     }
+
+    this.api = new HistowikiApi("http://localhost:5000")
   }
 
   loadDataset() {
-    fetch(`http://localhost:5000/people?${this.state.rectBounds.asQueryParams()}`)
-      .then(response => response.json())
+    this.api.people({bounds: this.state.rectBounds})
       .then(dataset => {
         var columnMap = {}
         dataset.columns.forEach((name,idx) => columnMap[name] = idx)
@@ -115,9 +145,9 @@ class HistoryTable extends Component {
       marker: Point.fromJsonPoint(event.data.birth_point)
     })
     const qid = event.data.person.split('/').slice(-1)[0]
-    fetch("http://localhost:5000/wikipedia_summary/" + qid)
-      .then(response => response.json())
+    this.api.wikipedia_summary({qid})
       .then(dataset => {
+        console.log(dataset);
         this.setState({content:dataset})
       })
   }
@@ -165,7 +195,7 @@ class HistoryTable extends Component {
                     transform={true} draggable={true}
                     onBoundChange={ this.onBoundChange.bind(this) }/>
 
-              {(this.state.marker) && <Marker position={this.state.marker.yx()} />}
+              {(this.state.marker) && <Marker position={this.state.marker.latLng()} />}
             </Map>
         </div>
         <div>

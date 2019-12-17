@@ -12,6 +12,16 @@ export class Rect {
   asLeafletBounds() {
     return [[this.miny, this.minx], [this.maxy, this.maxx]];
   }
+
+  asDict() {
+    return {
+      minx: this.minx,
+      miny: this.miny,
+      maxx: this.maxx,
+      maxy: this.maxy
+    }
+  }
+
   asQueryParams() {
     return `minx=${this.minx}&maxx=${this.maxx}&miny=${this.miny}&maxy=${this.maxy}`
   }
@@ -23,6 +33,10 @@ export class Point {
   }
   static fromJsonPoint(pt) {
     return new Point(pt.coordinates[0], pt.coordinates[1])
+  }
+
+  asDict() {
+    return {x:this.x, y:this.y}
   }
 
   xy() { return [this.x, this.y] }
