@@ -5,6 +5,7 @@ import Grid from '@material-ui/core/Grid';
 
 import DraggableRectangle from './DraggableRectangle';
 import { Rect, Point } from './Geometry';
+import { HistowikiApi } from './HistowikiApi';
 
 import moment from 'moment';
 
@@ -21,41 +22,6 @@ function hyperlinkRenderer(urlField) {
     const url = params.data[urlField];
     const display = params.value;
     return `<a href=${url}>${display}`;
-  }
-}
-
-function withUrlParams(url, params) {
-  var urlObj = new URL(url);
-  var params = params || {};
-  Object.keys(params).forEach(key => {
-    if (typeof params[key] !== 'undefined') { urlObj.searchParams.append(key, params[key]); }
-  })
-  return urlObj;
-}
-
-class HistowikiApi {
-  constructor(baseUrl = "http://localhost:5000") {
-    this.baseUrl = baseUrl
-  }
-
-  apiUrl(endPoint, params) {
-    return withUrlParams(new URL(endPoint,this.baseUrl), params);
-  }
-
-  people({
-      bounds, // geometry.Rect
-      limit,
-      only_query} = {}
-    ) {
-      const params = Object.assign({}, bounds.asDict(), {limit:limit, only_query:only_query});
-      return fetch(this.apiUrl("people", params))
-        .then(response => response.json())
-      }
-
-  wikipedia_summary({qid}) {
-    if (!qid) { throw "qid is required"; }
-    return fetch(this.apiUrl(`wikipedia_summary/${qid}`))
-      .then(response => response.json());
   }
 }
 
