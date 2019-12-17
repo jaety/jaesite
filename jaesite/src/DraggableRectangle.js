@@ -28,12 +28,14 @@ class Rectangle extends Path<LeafletElement, Props> {
   }
 
   onMoveEnd(e) {
-    this.props.onBoundChange(Rect.fromLeafletBounds(this.leafletElement.getBounds()));
+    const bounds = this.leafletElement.getBounds();
+    const boundRect = Rect.fromLeafletBounds(bounds);
+    this.props.onBoundChange(boundRect);
   }
 
   updateLeafletElement(fromProps: Props, toProps: Props) {
     if (toProps.bounds !== fromProps.bounds) {
-      this.leafletElement.setBounds(toProps.bounds)
+      this.leafletElement.setBounds(toProps.bounds.asLeafletBounds())
       //this.props.onBoundChange(toProps.bounds);
     }
     this.setStyleIfChanged(fromProps, toProps)

@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { Map, TileLayer, Rectangle, Path, Marker } from 'react-leaflet';
+import { Map, TileLayer, Marker } from 'react-leaflet';
 import Grid from '@material-ui/core/Grid';
 
 import DraggableRectangle from './DraggableRectangle';
-import { Rect } from './Geometry';
+import { Rect, Point } from './Geometry';
 
 import moment from 'moment';
 
@@ -79,16 +79,6 @@ function peopleToTable(dataset) {
   }
 }
 
-const constants = {
-  map: {
-    start_lat: 47.9899,
-    start_lng: 48.3509,
-    start_zoom: 2
-  }
-}
-
-
-
 class HistoryTable extends Component {
   constructor(props) {
     super(props);
@@ -96,12 +86,9 @@ class HistoryTable extends Component {
       columnDefs: [],
       rowData: [],
 
-      lat: constants.map.start_lat,
-      lng: constants.map.start_lng,
-      zoom: constants.map.start_zoom,
-
+      center: new Point(48.3509, 47.9899),
+      zoom: 2,
       rectBounds: new Rect(-17, 17, 62, 72),
-
       marker: null,
 
       content: "Welcome to the histor-wiki"
@@ -125,7 +112,7 @@ class HistoryTable extends Component {
 
   onCellClicked(event) {
     this.setState({
-      marker: point2position(event.data.birth_point)
+      marker: Point.fromJsonPoint(event.data.birth_point)
     })
     const qid = event.data.person.split('/').slice(-1)[0]
     fetch("http://localhost:5000/wikipedia_summary/" + qid)
@@ -136,17 +123,12 @@ class HistoryTable extends Component {
   }
 
   onBoundChange(bounds) {
-    this.setState({
-      rectBounds: Rect.fromLeafletBounds(bounds)
-    });
+    this.setState({ rectBounds: bounds });
     this.loadDataset();
-    console.log(bounds);
   }
 
   render() {
     const leftColumnWidth=8;
-
-    const position = [this.state.lat, this.state.lng];
 
     const mapboxAccessToken = 'pk.eyJ1IjoiamFldHkiLCJhIjoiY2p5Y3hpaDNtMGF6MTNwanprY2lmZGtoaSJ9.vv8A-gUvtzjeAkU8oNGHQw';
     const mapUrl = 'https://api.tiles.mapbox.com/v4/mapbox.light/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken;
@@ -174,7 +156,7 @@ class HistoryTable extends Component {
       </Grid>
       <Grid item xs={12-leftColumnWidth}>
         <div>
-            <Map center={position} zoom={this.state.zoom} ref="map" maxZoom={18} style={ {height:'300px'} }>
+            <Map center={this.state.center.latLng()} zoom={this.state.zoom} ref="map" maxZoom={18} style={ {height:'300px'} }>
               <TileLayer
                 attribution={mapAttribution}
                 url={mapUrl}
@@ -183,7 +165,7 @@ class HistoryTable extends Component {
                     transform={true} draggable={true}
                     onBoundChange={ this.onBoundChange.bind(this) }/>
 
-              {(this.state.marker) && <Marker position={this.state.marker} />}
+              {(this.state.marker) && <Marker position={this.state.marker.yx()} />}
             </Map>
         </div>
         <div>
