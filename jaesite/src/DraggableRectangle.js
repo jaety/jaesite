@@ -2,6 +2,7 @@ import { Rectangle as LeafletRectangle } from 'leaflet'
 
 import { Path, withLeaflet}  from 'react-leaflet'
 import type { LatLngBounds, PathProps } from 'react-leaflet/types'
+import { Rect } from './Geometry'
 
 type LeafletElement = LeafletRectangle
 type Props = { bounds: LatLngBounds } & PathProps
@@ -12,7 +13,7 @@ class Rectangle extends Path<LeafletElement, Props> {
   }
 
   createLeafletElement(props: Props): LeafletElement {
-    const rect = new LeafletRectangle(props.bounds, this.getOptions(props));
+    const rect = new LeafletRectangle(props.bounds.asLeafletBounds(), this.getOptions(props));
     rect.on('scaleend', this.onMoveEnd.bind(this));
     rect.on('dragend', this.onMoveEnd.bind(this));
     return rect;
@@ -27,7 +28,7 @@ class Rectangle extends Path<LeafletElement, Props> {
   }
 
   onMoveEnd(e) {
-    this.props.onBoundChange(this.leafletElement.getBounds());
+    this.props.onBoundChange(Rect.fromLeafletBounds(this.leafletElement.getBounds()));
   }
 
   updateLeafletElement(fromProps: Props, toProps: Props) {

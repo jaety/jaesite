@@ -1,39 +1,61 @@
 import React, { Component } from 'react';
 import { AgGridReact } from 'ag-grid-react';
+import { Map, TileLayer, Rectangle, Path, Marker } from 'react-leaflet';
+import Grid from '@material-ui/core/Grid';
+
+import DraggableRectangle from './DraggableRectangle';
+import { Rect } from './Geometry';
+
+import moment from 'moment';
+
+import 'leaflet-path-transform';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import moment from 'moment';
-import Grid from '@material-ui/core/Grid';
-import { Map, TileLayer, Rectangle, Path, Marker } from 'react-leaflet';
-import 'leaflet-path-transform';
-import DraggableRectangle from './DraggableRectangle';
 
 function point2position(point) {
   return [point.coordinates[1], point.coordinates[0]];
 }
 
+/**
+  AG Grid : Render a field as a url, with href taken from another field
+    @param {string} urlField : field from data object
+ */
+function hyperlinkRenderer(urlField) {
+  return (params) => {
+    const url = params.data[urlField];
+    const display = params.value;
+    return `<a href=${url}>${display}`;
+  }
+}
+
 function peopleToTable(dataset) {
   const columnDefs = [
-    {headerName: 'Name', field: 'name',
-      cellRenderer: (params) => {
-        const url = params.data["person"];
-        const name= params.value;
-        return `<a href=${url}>${name}</a>`
-      },
-      sortable: true, resizable: true
+    { headerName: 'Name',
+      field: 'name',
+      cellRenderer: hyperlinkRenderer('person'),
+      sortable: true,
+      resizable: true
     },
-    {headerName: 'Description', field: 'desc', resizable: true},
-    {headerName: 'Birth Place', field: 'birthPlaceName', sortable: true, resizable: true},
-    {headerName: 'Birth Year', field: 'birthTime', sortable: true, resizable: true,
+    { headerName: 'Description',
+      field: 'desc',
+      resizable: true
+    },
+    { headerName: 'Birth Place',
+      field: 'birthPlaceName',
+      sortable: true,
+      resizable: true
+    },
+    { headerName: 'Birth Year',
+      field: 'birthTime',
+      sortable: true,
+      resizable: true,
       filter: 'agNumberColumnFilter',
       filterParams:{
         defaultOption:['inRange']
       }
     }
   ];
-  // const columnDefs = dataset.columns.map(f => {
-  //   return {headerName:f, field:f}
-  // });
+
   const customConverters = {
     'birthTime': (value) => {
       const valueFixed = (value[0] === '-') ? '-00' + value.substring(1) : value;
@@ -57,6 +79,15 @@ function peopleToTable(dataset) {
   }
 }
 
+const constants = {
+  map: {
+    start_lat: 47.9899,
+    start_lng: 48.3509,
+    start_zoom: 2
+  }
+}
+
+
 
 class HistoryTable extends Component {
   constructor(props) {
@@ -65,14 +96,11 @@ class HistoryTable extends Component {
       columnDefs: [],
       rowData: [],
 
-      lat: 47.9899,
-      lng: 48.3509,
-      zoom: 2,
+      lat: constants.map.start_lat,
+      lng: constants.map.start_lng,
+      zoom: constants.map.start_zoom,
 
-      rectBounds: [
-        [17, -17],
-        [72, 62]
-      ],
+      rectBounds: new Rect(-17, 17, 62, 72),
 
       marker: null,
 
@@ -81,11 +109,7 @@ class HistoryTable extends Component {
   }
 
   loadDataset() {
-    const miny = this.state.rectBounds[0][0]
-    const minx = this.state.rectBounds[0][1]
-    const maxy = this.state.rectBounds[1][0]
-    const maxx = this.state.rectBounds[1][1]
-    fetch(`http://localhost:5000/people?minx=${minx}&miny=${miny}&maxx=${maxx}&maxy=${maxy}`)
+    fetch(`http://localhost:5000/people?${this.state.rectBounds.asQueryParams()}`)
       .then(response => response.json())
       .then(dataset => {
         var columnMap = {}
@@ -100,11 +124,6 @@ class HistoryTable extends Component {
   }
 
   onCellClicked(event) {
-    /*
-    const birth_point = event.data.birth_point.coordinates;
-    const zoom = this.refs.map.leafletElement.getZoom();
-    this.setState({lng: birth_point[0], lat: birth_point[1], zoom: zoom});
-    */
     this.setState({
       marker: point2position(event.data.birth_point)
     })
@@ -118,10 +137,7 @@ class HistoryTable extends Component {
 
   onBoundChange(bounds) {
     this.setState({
-      rectBounds: [
-        [bounds.getSouth(), bounds.getWest()],
-        [bounds.getNorth(), bounds.getEast()]
-      ]
+      rectBounds: Rect.fromLeafletBounds(bounds)
     });
     this.loadDataset();
     console.log(bounds);
@@ -163,7 +179,7 @@ class HistoryTable extends Component {
                 attribution={mapAttribution}
                 url={mapUrl}
               />
-              <DraggableRectangle bounds={this.state.rectBounds} color="blue" ref="rectBounds"
+              <DraggableRectangle bounds={this.state.rectBounds} color="blue"
                     transform={true} draggable={true}
                     onBoundChange={ this.onBoundChange.bind(this) }/>
 
