@@ -27,7 +27,9 @@ function hyperlinkRenderer(urlField) {
 function withUrlParams(url, params) {
   var urlObj = new URL(url);
   var params = params || {};
-  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+  Object.keys(params).forEach(key => {
+    if (typeof params[key] !== 'undefined') { urlObj.searchParams.append(key, params[key]); }
+  })
   return urlObj;
 }
 
@@ -43,7 +45,7 @@ class HistowikiApi {
   people({
       bounds, // geometry.Rect
       limit,
-      only_query = false} = {}
+      only_query} = {}
     ) {
       const params = Object.assign({}, bounds.asDict(), {limit:limit, only_query:only_query});
       return fetch(this.apiUrl("people", params))
@@ -147,7 +149,6 @@ class HistoryTable extends Component {
     const qid = event.data.person.split('/').slice(-1)[0]
     this.api.wikipedia_summary({qid})
       .then(dataset => {
-        console.log(dataset);
         this.setState({content:dataset})
       })
   }
