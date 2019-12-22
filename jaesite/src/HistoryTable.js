@@ -2,10 +2,12 @@ import React, { Component } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { Map, TileLayer, Marker } from 'react-leaflet';
 import Grid from '@material-ui/core/Grid';
-
+import Slider from '@material-ui/core/Slider';
 import DraggableRectangle from './DraggableRectangle';
 import { Rect, Point } from './Geometry';
 import { HistowikiApi } from './HistowikiApi';
+import Input from '@material-ui/core/Input';
+import { makeStyles } from '@material-ui/core/styles';
 
 import moment from 'moment';
 
@@ -88,15 +90,19 @@ class HistoryTable extends Component {
       rectBounds: new Rect(-17, 17, 62, 72),
       marker: null,
 
-      content: "Welcome to the histor-wiki"
+      content: "Welcome to the histor-wiki",
+
+      timeMaxBounds: [-4000,2200],
+      timeBounds: [-3900,2100]
     }
 
     this.api = new HistowikiApi("http://localhost:5000")
   }
 
   loadDataset() {
-    this.api.people({bounds: this.state.rectBounds})
+    this.api.people({bounds: this.state.rectBounds, minyear:this.state.timeBounds[0], maxyear:this.state.timeBounds[1]})
       .then(dataset => {
+        console.log(dataset);
         var columnMap = {}
         dataset.columns.forEach((name,idx) => columnMap[name] = idx)
         dataset['map'] = columnMap
@@ -124,7 +130,23 @@ class HistoryTable extends Component {
     this.loadDataset();
   }
 
+  onTimeChange(event, range) {
+    this.setState({ timeBounds: range });
+    this.loadDataset();
+  }
+
+  // onMinTimeChange(event) {
+  //   var newBounds = this.state.timeBounds;
+  //   this.setState({ timeBounds: [event.target.value, newBounds[1]]})
+  // }
+  //
+  // onMaxTimeChange(event) {
+  //   var newBounds = this.state.timeBounds;
+  //   this.setState({ timeBounds: [newBounds[0], event.target.value]})
+  // }
+
   render() {
+    const classes = makeStyles();
     const leftColumnWidth=8;
 
     const mapboxAccessToken = 'pk.eyJ1IjoiamFldHkiLCJhIjoiY2p5Y3hpaDNtMGF6MTNwanprY2lmZGtoaSJ9.vv8A-gUvtzjeAkU8oNGHQw';
@@ -152,7 +174,36 @@ class HistoryTable extends Component {
         </div>
       </Grid>
       <Grid item xs={12-leftColumnWidth}>
+        <div style={ {"margin-bottom": "20px"}}>
+        Time Bounds
+        <Grid container spacing={1}>
+          <Grid item xs={2} style={{"text-align":"center"}}>
+            {this.state.timeBounds[0]}
+            {/*
+            <Input className={classes.input}  value={this.state.timeBounds[0]} onChange={this.onMinTimeChange.bind(this)}/>
+            */}
+          </Grid>
+
+          <Grid item xs={8}>
+            <Slider
+              value={this.state.timeBounds}
+              onChange={this.onTimeChange.bind(this)}
+              valueLabelDisplay="auto"
+              aria-labelledby="range-slider"
+              min={this.state.timeMaxBounds[0]}
+              max={this.state.timeMaxBounds[1]}
+            />
+          </Grid>
+          <Grid item xs={2} style={{"text-align":"center"}}>
+            {this.state.timeBounds[1]}
+            {/*
+            <Input className={classes.input}  value={this.state.timeBounds[1]} onChange={this.onMaxTimeChange.bind(this)}/>
+            */}
+          </Grid>
+        </Grid>
+        </div>
         <div>
+          Geo Bounds
             <Map center={this.state.center.latLng()} zoom={this.state.zoom} ref="map" maxZoom={18} style={ {height:'300px'} }>
               <TileLayer
                 attribution={mapAttribution}

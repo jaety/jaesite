@@ -31,10 +31,12 @@ export class HistowikiApi {
    */
   people({
       bounds, // geometry.Rect
+      minyear,
+      maxyear,
       limit,
       only_query} = {}
     ) {
-      const params = Object.assign({}, bounds.asDict(), {limit:limit, only_query:only_query});
+      const params = Object.assign({}, bounds.asDict(), {limit:limit, only_query:only_query, minyear:minyear, maxyear:maxyear});
       return fetch(this.apiUrl("people", params))
         .then(response => response.json())
       }
