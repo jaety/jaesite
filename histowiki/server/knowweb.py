@@ -110,7 +110,6 @@ def people():
     limitStr = 'limit ' + limit if limit else ''
     boundsStr = ""
     bounds = { p:request.args.get(p) for p in ['minx','maxx','miny','maxy'] }
-    print(bounds, file=sys.stderr)
     if reduce(lambda x,y: x and y, bounds.values()):
         boundsStr = """ AND "birthCoords" &&
         ST_MakeEnvelope (
@@ -118,6 +117,16 @@ def people():
             {maxx}, {maxy}, -- box limits
             4326)
         """.format(**bounds)
+
+    minTime = request.args.get("minyear")
+    minTimeStr = ""
+    if minTime:
+        minTimeStr = " AND birthyear >= {} ".format(int(minTime))
+
+    maxTime = request.args.get("maxyear")
+    maxTimeStr = ""
+    if maxTime:
+        maxTimeStr = " AND birthyear <= {} ".format(int(maxTime))
 
     def format_result(records, columns):
         return {
@@ -127,7 +136,7 @@ def people():
     return query_db("""
         select person, name, ST_AsGeoJSON("birthCoords")::json as birth_point, "desc", "birthTime", "birthPlaceName" from people
         where name is not null
-    """ + boundsStr + limitStr, format_result, only_query)
+    """ + boundsStr + minTimeStr + maxTimeStr + limitStr, format_result, only_query)
     # return {"columns": columns, "rows":rows}
 
 @app.route('/count_over_time')
