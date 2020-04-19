@@ -1,10 +1,21 @@
 import React from 'react';
 import L from 'leaflet';
-import { Map, TileLayer, Marker, Popup, Rectangle, Tooltip, GeoJSON } from 'react-leaflet';
-import { MapControl, PropTypes } from 'react-leaflet';
+import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
+// import { MapControl, PropTypes } from 'react-leaflet';
+import moment from 'moment';
 // import DivIcon from 'react-leaflet-div-icon';
 import 'leaflet/dist/leaflet.css';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
+
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+import addHistogramModule from 'highcharts/modules/histogram-bellcurve'
+
+// import { makeStyles } from '@material-ui/core/styles';
+// import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
+
+addHistogramModule(Highcharts);
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -16,30 +27,20 @@ L.Icon.Default.mergeOptions({
     shadowUrl: require('leaflet/dist/images/marker-shadow.png')
 });
 
-function getColor(input, scale) {
-    var colors = ['#FFEDA0','#FED976','#FEB24C','#FD8D3C','#FC4E2A','#E31A1C','#BD0026','#800026'];
-    return colors[Math.min(Math.floor( (input / scale) * (colors.length-1) ), colors.length-1)];
-    // let d = input / 100000;
-    // return d > 1000 ? '#800026' :
-    //        d > 500  ? '#BD0026' :
-    //        d > 200  ? '#E31A1C' :
-    //        d > 100  ? '#FC4E2A' :
-    //        d > 50   ? '#FD8D3C' :
-    //        d > 20   ? '#FEB24C' :
-    //        d > 10   ? '#FED976' :
-    //                   '#FFEDA0';
-}
+// function getColor(input, scale) {
+//     var colors = ['#FFEDA0','#FED976','#FEB24C','#FD8D3C','#FC4E2A','#E31A1C','#BD0026','#800026'];
+//     return colors[Math.min(Math.floor( (input / scale) * (colors.length-1) ), colors.length-1)];
+//     // let d = input / 100000;
+//     // return d > 1000 ? '#800026' :
+//     //        d > 500  ? '#BD0026' :
+//     //        d > 200  ? '#E31A1C' :
+//     //        d > 100  ? '#FC4E2A' :
+//     //        d > 50   ? '#FD8D3C' :
+//     //        d > 20   ? '#FEB24C' :
+//     //        d > 10   ? '#FED976' :
+//     //                   '#FFEDA0';
+// }
 
-function style(feature) {
-    return {
-        fillColor: getColor(feature.properties.population, 1000),
-        weight: 2,
-        opacity: 1,
-        color: 'white',
-        dashArray: '3',
-        fillOpacity: 0.7
-    };
-}
 
 function highlightFeature(e) {
     var layer = e.target;
@@ -62,8 +63,8 @@ function point2position(point) {
 
 
 class HistoryMap extends React.Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     this.state = {
       lat: -19.0154,
       lng: 29.1549,
@@ -72,6 +73,17 @@ class HistoryMap extends React.Component {
       people: {rows:[]},
       highlightCenter: undefined,
       hightlightCountry: undefined,
+      timeChartState: {
+          chart: {
+            zoomType: 'x'
+          },
+          title: {
+            text: 'Over Time'
+          },
+          series: [{
+              data: [3.5, 3, 3.2, 3.1, 3.6, 3.9, 3.4]
+          }]
+      }
     }
   }
 
@@ -79,10 +91,49 @@ class HistoryMap extends React.Component {
     fetch('http://localhost:5000')
       .then(response => response.json())
       .then(dataset => this.setState({datasets: [dataset]}))
-    fetch('http://localhost:5000/people')
+    fetch('http://localhost:5000/people?limit=100')
       .then(response => response.json())
       .then(dataset => {
+        var columnMap = {}
+        dataset.columns.forEach((name,idx) => columnMap[name] = idx)
+        dataset['map'] = columnMap
         this.setState({people: dataset});
+      })
+    fetch('http://localhost:5000/count_over_time')
+      .then(response => response.json())
+      .then(dataset => {
+        this.setState({'timeChartState': {
+          xAxis: [{
+              title: { text: 'Year' },
+              alignTicks: false
+          } /*, {
+              title: { text: 'Histogram' },
+              alignTicks: false,
+              opposite: true
+          } */],
+
+          yAxis: [{
+              title: { text: 'Counts' }
+          } /*, {
+              title: { text: 'Histogram' },
+              opposite: true
+          }*/],
+
+          series: [
+            // {
+            //   type: 'histogram',
+            //   baseSeries: 1,
+            //   xAxis: 1,
+            //   yAxis: 1
+            // },
+            {
+              data: dataset,
+              step: true,
+              xAxis: 0,
+              yAxis: 0
+            }
+          ]
+        }});
       })
   }
 
@@ -116,35 +167,21 @@ class HistoryMap extends React.Component {
   }
 
   handleMoveEnd(e) {
-    // function buildUrl(base, bounds) {
-    //   return `http://localhost:5000/${base}?minx=${bounds.getWest()}&maxx=${bounds.getEast()}&miny=${bounds.getSouth()}&maxy=${bounds.getNorth()}`
+    console.log('hahaha');
+    // const mb = e.target.getBounds();
+    // const bounds = {
+    //   west: mb.getWest(),
+    //   east: mb.getEast(),
+    //   north: mb.getNorth(),
+    //   south: mb.getSouth()
     // }
-    //
-    // const bounds = e.target.getBounds();
-    // console.log(bounds);
-    // console.log(buildUrl("count_in_box",bounds))
-    // fetch(buildUrl("count_in_box",bounds))
-    //   .then(response => response.json())
-    //   .then(count => {
-    //     console.log("count",count, count<75)
-    //     if (count < 200) {
-    //       fetch(buildUrl("people_in_box",bounds))
-    //         .then(response => response.json())
-    //         .then(dataset => {
-    //           console.log(dataset)
-    //           this.setState({people: dataset});
-    //         })
-    //     } else {
-    //       this.setState({
-    //         people: {rows:[]}
-    //       })
-    //     }
-    //   });
+    // this.setState({
+    //   mapBounds: bounds
+    // });
   }
 
   render() {
     const position = [this.state.lat, this.state.lng];
-    const highlightPosition = this.state.highlightCenter;
 
     const mapboxAccessToken = 'pk.eyJ1IjoiamFldHkiLCJhIjoiY2p5Y3hpaDNtMGF6MTNwanprY2lmZGtoaSJ9.vv8A-gUvtzjeAkU8oNGHQw';
     const mapUrl = 'https://api.tiles.mapbox.com/v4/mapbox.light/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken;
@@ -152,47 +189,45 @@ class HistoryMap extends React.Component {
 			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>';
 
+    const colmap = this.state.people.map;
 
-    // const rectBounds = (!highlightPosition) ? null : (
-    //   [[highlightPosition[0]-20, highlightPosition[1]-20],
-    //    [highlightPosition[0]-10, highlightPosition[1]-10]]
-    //  );
-    var marker = null;
-    if (highlightPosition) {
-      const rectBounds = [highlightPosition, highlightPosition];
-      const count = this.state.highlightCountry.properties.population;
-      marker = (!highlightPosition) ? null : (
-        <Rectangle bounds={rectBounds}>
-          <Tooltip permanent>{count}</Tooltip>
-        </Rectangle>
-        // <Marker position={highlightPosition}>
-        //   <Popup>
-        //     A pretty CSS3 popup. <br/> Easily customizable.
-        //   </Popup>
-        // </Marker>
-      )
+    function formatDate(d) {
+      const dFixed = d.replace(/^-/,"-00");
+      return moment.utc(dFixed).format("MMM Do YYYY")
     }
-    const rows = this.state.people.rows;
-    console.log(rows)
-    console.log(rows.map((row,idx) => point2position(row[2])))
 
     return (
-      <Map center={position} zoom={this.state.zoom} ref="map" onMoveEnd={this.handleMoveEnd.bind(this)} maxZoom={18}>
-        <TileLayer
-          attribution={mapAttribution}
-          url={mapUrl}
-        />
-        <MarkerClusterGroup>
-        {this.state.people.rows.map((row,idx) =>
-          <Marker key={`marker-${idx}`} position={point2position(row[2])} autoPan="false">
-            <Popup>
-              <p><span><a href={row[0]}>{row[1]}</a></span></p>
-              <p>{row[3]}</p>
-            </Popup>
-          </Marker>
-        )}
-        </MarkerClusterGroup>
-      </Map>
+      <div>
+        <Grid container spacing={1}>
+          <Grid item xs={8}>
+            <Map center={position} zoom={this.state.zoom} ref="map" onMoveEnd={this.handleMoveEnd.bind(this)} maxZoom={18}>
+              <TileLayer
+                attribution={mapAttribution}
+                url={mapUrl}
+              />
+              <MarkerClusterGroup chunkedLoading={true}>
+              {this.state.people.rows.map((row,idx) =>
+                <Marker key={`marker-${idx}`} position={point2position(row[colmap["birth_point"]])} autoPan="false">
+                  <Popup>
+                    <span><a href={row[colmap["person"]]}>{row[colmap["name"]]}</a></span>
+                    <br />
+                    {row[colmap["desc"]]}
+                    <br />
+                    {formatDate(row[colmap["birthTime"]])}
+                  </Popup>
+                </Marker>
+              )}
+              </MarkerClusterGroup>
+            </Map>
+          </Grid>
+          <Grid item xs={4}>
+            <HighchartsReact
+              highcharts={Highcharts}
+              options={this.state.timeChartState}
+            />
+          </Grid>
+        </Grid>
+      </div>
     );
   }
 }
