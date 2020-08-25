@@ -7,7 +7,7 @@
     "@material-ui/core": "^4.9.11",
     "ag-grid-community": "^21.0.1",
     "ag-grid-react": "^21.0.1",
-    "highcharts": "^7.2.1",
+    "highcharts": "^7.2.2",
     "highcharts-react-official": "^2.2.2",
     "leaflet": "^1.6.0",
     "leaflet-path-transform": "^1.1.2",
