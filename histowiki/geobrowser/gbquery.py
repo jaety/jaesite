@@ -1,4 +1,5 @@
 import psycopg2
+import math
 
 def query_db(query, parse_results = lambda x,y: x, only_query=False):
     if only_query:

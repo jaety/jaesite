@@ -27,10 +27,11 @@ def test_counts_by_country():
         'type': 'FeatureCollection'
     }
     compare = next(x for x in counts['features'] if x['id'] == 138)
-    assert compare['id'] == 138
-    assert compare['properties']['code'] == 'ITA'
-    assert compare['properties']['name'] == 'Italy'
-    assert compare['properties']['population'] == 1246
+    italy = target['features'][0]
+    assert compare['id'] == italy['id']
+    assert compare['properties']['code'] == italy['properties']['code']
+    assert compare['properties']['name'] == italy['properties']['name']
+    assert compare['properties']['population'] == italy['properties'][1246]
 
 def test_retrieve_person():
     reader = DatabaseReader()

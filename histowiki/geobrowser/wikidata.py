@@ -15,17 +15,45 @@ import geopandas as gpd
 
 QueryItem = namedtuple("QueryItem", ["fields","query"])
 
-def retrieve_raw(query):
-    url = 'https://query.wikidata.org/sparql'
-    r = requests.post(url, data = {'format': 'json', 'query': query})
-    json = r.json()
-    return json
-
-def index_by_ids(df, source_column='qid'):
-    df['id'] = df[source_column].apply(lambda x: int(re.search('Q([0-9]+)$', x).group(1)))
-    return df.set_index('id')
-
 def retrieve(query, query_only=False, as_pandas=True, aggregator=lambda df: df, conversions={}):
+    """Run a query against the SPARQL endpoint of wikidata
+    
+        Parameters
+        query_only: just returns the query itself as a string
+        as_pandas:  convert the raw json into a pandas dataframe
+        aggregator: extension point to perform custom aggregation of rows in the pandas dataframe
+                    ignored unless as_pandas is True 
+        conversions: extension point to perform column by column transformations of the returned data
+                     structured as a map with keys as column names and values as functions
+                     ignored unless as_pandas is True
+    """
+    def retrieve_raw(query):
+        url = 'https://query.wikidata.org/sparql'
+        r = requests.post(url, data = {'format': 'json', 'query': query})
+        json = r.json()
+        return json
+
+    def index_by_ids(df, source_column='qid'):
+        ''' set the index of the dataframe from the qid column '''
+        df['id'] = df[source_column].apply(lambda x: int(re.search('Q([0-9]+)$', x).group(1)))
+        return df.set_index('id')
+
+    def to_pandas(data, conversions={}):
+        ''' convert raw json to pandas dataframe with optional column data conversions '''
+        results = []
+        vars = data['head']['vars']
+        for item in data['results']['bindings']:
+            row = {}
+            for var in vars:
+                val = deepquery(item, var + '/value')
+                val = conversions.get(var, lambda x: x )(val) if val else val
+                row[var] = val
+            results.append(row)
+        return pd.DataFrame.from_records(results)
+
+    ################################
+    # Begin Main Function
+
     if query_only:
         return query
     else:
@@ -37,7 +65,13 @@ def retrieve(query, query_only=False, as_pandas=True, aggregator=lambda df: df, 
 
 
 def qids_by_daterange(begin, end, query_only=False, as_pandas=True):
-    """ Distinct set of QIDs from a given time range, based on birth date """
+    """ Distinct set of QIDs from a given time range, based on birth date 
+        
+        Parameters
+            begin: Year as int or string (inclusive) 
+            end:   Year as int or string (up to but not including)
+            query_only, as_pandas see retrieve function
+    """
 
     beginStr = """(?birth_date >= "{}-01-01"^^xsd:dateTime) && """.format(begin) if begin else ""
     endStr   = """(?birth_date <  "{}-01-01"^^xsd:dateTime)""".format(end)
@@ -54,6 +88,16 @@ def qids_by_daterange(begin, end, query_only=False, as_pandas=True):
     return retrieve(query, query_only, as_pandas)
 
 def query_item(qids, item, query_only=False, as_pandas=True, list_options=False):
+    """Return data for a specific set of qids
+
+    Parameters:
+        qids: List of qids
+        item: query item to retrieve (depending on value may be more than one returned field)
+        query_only, as_pandas: see documentation of retrieve
+        
+        list_options: if true, just print the available values for 'item' parameter
+    """
+
     queries = {
         "wikipedia": QueryItem(["?wikipedia"], """
                        ?wikipedia schema:about ?qid.
@@ -137,6 +181,26 @@ def query_item(qids, item, query_only=False, as_pandas=True, list_options=False)
         )
 
         return retrieve(query, query_only, as_pandas, aggregator=aggregator.get(item, default_aggregator), conversions=conversions)
+
+def query_items(qids, items, query_only=False, as_pandas=True, list_options=False):
+    """ Return multiple item columns at the same time. See query_item for parameter details """
+    if list_options:
+        return query_item(qids, items, list_options=True)
+    else:
+        dfs = [query_item(qids, item, query_only, as_pandas) for item in items]
+        if query_only or not as_pandas:
+            return dfs 
+        else:
+            return pd.concat(dfs, axis=1)
+
+
+
+#####################################
+#
+# End Cleaned
+#
+#####################################
+
 
 def people_count_query(begin,end):
     beginStr = """(?birthDate >= "{}-01-01"^^xsd:dateTime) && """.format(begin) if begin else ""
@@ -241,17 +305,6 @@ def deepquery(item, path, default = None):
 
     return val
 
-def to_pandas(data, conversions={}):
-    results = []
-    vars = data['head']['vars']
-    for item in data['results']['bindings']:
-        row = {}
-        for var in vars:
-            val = deepquery(item, var + '/value')
-            val = conversions.get(var, lambda x: x )(val) if val else val
-            row[var] = val
-        results.append(row)
-    return pd.DataFrame.from_records(results)
 
 def create_people_table_statement(table_name = "people"):
     return """
