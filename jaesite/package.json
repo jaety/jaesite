@@ -14,7 +14,7 @@
     "leaflet.markercluster": "^1.4.1",
     "material-ui-icons": "^1.0.0-beta.36",
     "moment": "^2.24.0",
-    "moment-timezone": "^0.5.27",
+    "moment-timezone": "^0.5.35",
     "pg": "^7.11.0",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
