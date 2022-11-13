@@ -22,7 +22,7 @@
     "react-leaflet": "^2.6.0",
     "react-leaflet-div-icon": "^1.1.0",
     "react-leaflet-markercluster": "^2.0.0-rc3",
-    "react-scripts": "^3.4.1",
+    "react-scripts": "^5.0.1",
     "redux": "^4.0.1"
   },
   "scripts": {
